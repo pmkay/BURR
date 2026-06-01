@@ -28,6 +28,8 @@ static int  s_quiet_start       = 22;        // quiet-hours start (0..23)
 static int  s_quiet_end         = 7;         // quiet-hours end   (0..23)
 static bool s_bt_alert          = false;     // buzz on Bluetooth disconnect
 static bool s_battery_show      = false;     // show battery % on reveal
+static bool s_steps_show        = false;     // show today's step count on reveal
+static bool s_heart_show        = false;     // show last heart rate (BPM) on reveal
 
 // ---------------------------------------------------------------------------
 // UI state
@@ -37,7 +39,7 @@ static TextLayer *s_time_layer;
 static TextLayer *s_status_layer;
 static AppTimer  *s_reveal_timer;
 static char       s_time_text[8]    = "00:00";
-static char       s_status_text[16] = "";
+static char       s_status_text[32] = "";
 
 // ---------------------------------------------------------------------------
 // Theme helpers
@@ -112,20 +114,54 @@ static void hide_reveal(void *data) {
 	layer_set_hidden(text_layer_get_layer(s_status_layer), true);
 }
 
+// Separator between status metrics: " · " (a middot, UTF-8 0xC2 0xB7, which the
+// Pebble system fonts render). Written as explicit bytes so it doesn't depend on
+// the compiler's execution charset.
+#define STATUS_SEP " \xc2\xb7 "
+
 // Reveal the time for s_reveal_secs. `status` is an optional override line
-// (e.g. "BT lost"); when NULL the battery level is shown if enabled.
+// (e.g. "BT lost"); when NULL the enabled metrics — today's steps, last heart
+// rate, and battery, in that order — are composed onto the single status line,
+// joined by STATUS_SEP. Only metrics the user enabled (and that the watch can
+// actually report) are shown; if none apply the status line stays hidden.
 static void reveal(const char *status) {
 	if (status) {
 		snprintf(s_status_text, sizeof(s_status_text), "%s", status);
-		layer_set_hidden(text_layer_get_layer(s_status_layer), false);
-	} else if (s_battery_show) {
-		BatteryChargeState batt = battery_state_service_peek();
-		snprintf(s_status_text, sizeof(s_status_text), "%d%%", batt.charge_percent);
-		layer_set_hidden(text_layer_get_layer(s_status_layer), false);
 	} else {
 		s_status_text[0] = '\0';
-		layer_set_hidden(text_layer_get_layer(s_status_layer), true);
+		const size_t cap = sizeof(s_status_text);
+		size_t len = 0;
+
+#if defined(PBL_HEALTH)
+		// Steps are reported on every health-capable platform; the value is the
+		// total since the start of the local day (0 if unavailable).
+		if (s_steps_show && len < cap) {
+			int steps = (int)health_service_sum_today(HealthMetricStepCount);
+			int n = snprintf(s_status_text + len, cap - len, "%s%d", len ? STATUS_SEP : "", steps);
+			if (n > 0) { len += n; }
+		}
+		// Heart rate only appears on watches with an HRM sensor that have a recent
+		// reading: gate on both the accessibility mask and a positive value so
+		// non-HRM models (and stale/empty readings) show nothing rather than 0.
+		if (s_heart_show && len < cap) {
+			HealthServiceAccessibilityMask acc =
+				health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
+			int bpm = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
+			if ((acc & HealthServiceAccessibilityMaskAvailable) && bpm > 0) {
+				int n = snprintf(s_status_text + len, cap - len, "%s%d", len ? STATUS_SEP : "", bpm);
+				if (n > 0) { len += n; }
+			}
+		}
+#endif
+
+		if (s_battery_show && len < cap) {
+			BatteryChargeState batt = battery_state_service_peek();
+			int n = snprintf(s_status_text + len, cap - len, "%s%d%%", len ? STATUS_SEP : "", batt.charge_percent);
+			if (n > 0) { len += n; }
+		}
 	}
+
+	layer_set_hidden(text_layer_get_layer(s_status_layer), s_status_text[0] == '\0');
 	text_layer_set_text(s_status_layer, s_status_text);
 	layer_set_hidden(text_layer_get_layer(s_time_layer), false);
 
@@ -213,6 +249,8 @@ enum {
 	PERSIST_QUIET_END,
 	PERSIST_BT_ALERT,
 	PERSIST_BATTERY_SHOW,
+	PERSIST_STEPS_SHOW,
+	PERSIST_HEART_SHOW,
 };
 
 static void load_settings(void) {
@@ -231,6 +269,8 @@ static void load_settings(void) {
 	if (persist_exists(PERSIST_QUIET_END))      { s_quiet_end      = persist_read_int(PERSIST_QUIET_END); }
 	if (persist_exists(PERSIST_BT_ALERT))       { s_bt_alert       = persist_read_bool(PERSIST_BT_ALERT); }
 	if (persist_exists(PERSIST_BATTERY_SHOW))   { s_battery_show   = persist_read_bool(PERSIST_BATTERY_SHOW); }
+	if (persist_exists(PERSIST_STEPS_SHOW))     { s_steps_show     = persist_read_bool(PERSIST_STEPS_SHOW); }
+	if (persist_exists(PERSIST_HEART_SHOW))     { s_heart_show     = persist_read_bool(PERSIST_HEART_SHOW); }
 
 	// Clamp anything that comes from sliders / selects / external input so that
 	// stale or out-of-range persisted data can't cause odd behaviour.
@@ -259,6 +299,8 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
 	if ((t = dict_find(iter, MESSAGE_KEY_quiet_end)))      { persist_write_int(PERSIST_QUIET_END, t->value->int32); }
 	if ((t = dict_find(iter, MESSAGE_KEY_bt_alert)))       { persist_write_bool(PERSIST_BT_ALERT, t->value->int32 != 0); }
 	if ((t = dict_find(iter, MESSAGE_KEY_battery_show)))   { persist_write_bool(PERSIST_BATTERY_SHOW, t->value->int32 != 0); }
+	if ((t = dict_find(iter, MESSAGE_KEY_steps_show)))     { persist_write_bool(PERSIST_STEPS_SHOW, t->value->int32 != 0); }
+	if ((t = dict_find(iter, MESSAGE_KEY_heart_show)))     { persist_write_bool(PERSIST_HEART_SHOW, t->value->int32 != 0); }
 
 	load_settings();
 	apply_theme();

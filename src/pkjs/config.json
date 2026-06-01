@@ -14,7 +14,12 @@
     { "type": "text", "defaultValue": "Time colour applies to colour watches only." },
     { "type": "slider", "messageKey": "reveal_secs", "label": "Reveal seconds", "defaultValue": 3,
       "min": 2, "max": 10, "step": 1 },
-    { "type": "toggle", "messageKey": "battery_show", "label": "Show battery on reveal", "defaultValue": false }
+    { "type": "toggle", "messageKey": "battery_show", "label": "Show battery on reveal", "defaultValue": false },
+    { "type": "toggle", "messageKey": "steps_show", "label": "Show steps on reveal", "defaultValue": false,
+      "capabilities": ["HEALTH"] },
+    { "type": "toggle", "messageKey": "heart_show", "label": "Show heart rate on reveal", "defaultValue": false,
+      "capabilities": ["NOT_PLATFORM_APLITE", "NOT_PLATFORM_BASALT", "NOT_PLATFORM_CHALK", "NOT_PLATFORM_FLINT", "NOT_PLATFORM_GABBRO"] },
+    { "type": "text", "defaultValue": "If more than one of these is on, they share the reveal line in this order: steps · heart · battery." }
   ] },
 
   { "type": "section", "items": [

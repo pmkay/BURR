@@ -28,7 +28,8 @@
       "watchface": true
     },
     "capabilities": [
-      "configurable"
+      "configurable",
+      "health"
     ],
     "messageKeys": [
       "theme",
@@ -41,7 +42,9 @@
       "quiet_start",
       "quiet_end",
       "bt_alert",
-      "battery_show"
+      "battery_show",
+      "steps_show",
+      "heart_show"
     ],
     "resources": {
       "media": [
