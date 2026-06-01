@@ -1,5 +1,5 @@
 [
-  { "type": "heading", "defaultValue": "Flying Blind" },
+  { "type": "heading", "defaultValue": "BURR" },
   { "type": "text", "defaultValue": "Tells the time by vibration. The screen stays blank — shake your wrist to reveal it." },
 
   { "type": "section", "items": [

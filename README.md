@@ -1,4 +1,4 @@
-# Flying Blind for Pebble
+# BURR
 
 A minimalist Pebble watch face that tells you the time by **vibration** instead
 of by sight. The screen stays blank — flick your wrist to briefly reveal the
@@ -7,13 +7,16 @@ time. Inspired by the [DURR](https://www.skreksto.re/products/durr) watch.
 - Long buzz on the hour.
 - Optional buzzes every 30 / 15 / 5 minutes, in a pattern distinct from the
   hourly chime so you can tell them apart by feel.
-- Shake to reveal the time (and, optionally, the battery level).
+- Shake to reveal the time — and, optionally, your battery level, today's step
+  count, and last heart rate (steps/heart rate need a health-capable watch;
+  heart rate shows only on models with a built-in sensor, e.g. Pebble 2 and
+  Pebble Time 2).
 - **Quiet hours** so it never buzzes while you sleep.
 - Light / dark themes, plus an accent colour for the time on colour watches.
 - Bluetooth-disconnect alert.
 - All settings configured on-device via **Clay** — no website, no account.
 
-![Flying Blind](watchface.jpg)
+![BURR](watchface.jpg)
 
 ## Building (2026 Pebble SDK / Core Devices)
 
@@ -62,6 +65,8 @@ the face). The Clay page lets you set:
 | Time colour | Any colour (colour watches only) |
 | Reveal seconds | 2–10 |
 | Show battery on reveal | On / Off |
+| Show steps on reveal | On / Off (hidden on watches without health) |
+| Show heart rate on reveal | On / Off (only on watches with a heart-rate sensor) |
 | Buzz on the hour | On / Off |
 | Between-hour buzzes | None / 30 min / 15 min / 5 min |
 | Buzz strength | Subtle / Normal / Strong |
@@ -81,9 +86,9 @@ resources/            Menu icon
 
 ## Credits
 
-Original "Flying Blind" watch face by
-[Matthew Congrove](http://github.com/mcongrove) (2013). DURR-style 5-minute
-vibration and the 2026 modernization/revitalization by PK.
+Developed by **PK**, building on the original "Flying Blind" watch face by
+[Matthew Congrove](http://github.com/mcongrove) (2013). The DURR-style timed
+vibration and the 2026 Core Devices modernization/revitalization are by PK.
 
 ## License
 

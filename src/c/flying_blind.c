@@ -1,5 +1,5 @@
 /**
- * Flying Blind — a Pebble watch face that tells the time by vibration.
+ * BURR — a Pebble watch face that tells the time by vibration.
  *
  * The screen stays blank; flick your wrist to briefly reveal the time.
  * Inspired by the DURR watch (a buzz every few minutes to keep you oriented

@@ -1,4 +1,4 @@
-// Flying Blind — PebbleKit JS entry point.
+// BURR — PebbleKit JS entry point.
 //
 // All configuration is handled on-device by Clay: it builds the settings page
 // locally (no web server, works offline) and automatically wires up the

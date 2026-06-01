@@ -1,6 +1,12 @@
 {
-  "name": "flying-blind",
-  "author": "Matthew Congrove (modernized by PK)",
+  "name": "BURR",
+  "author": "PK",
+  "contributors": [
+    {
+      "name": "Matthew Congrove",
+      "url": "http://github.com/mcongrove"
+    }
+  ],
   "version": "2.0.0",
   "keywords": [
     "pebble-app",
@@ -11,8 +17,8 @@
     "@rebble/clay": "^1.0.10"
   },
   "pebble": {
-    "displayName": "Flying Blind",
-    "uuid": "e6fede97-0806-43e2-9159-54638cd13253",
+    "displayName": "BURR",
+    "uuid": "5ae669ef-ba55-4906-a6c4-9e4680da6030",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
