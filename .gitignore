@@ -1,7 +1,16 @@
+# Build output
+build/
+*.pbw
 
-# Ignore build generated files
-build
+# Dependencies
+node_modules/
 
-/.lock-waf_darwin_build
+# Pebble / waf leftovers
+.lock-waf_*
+.pebble-packages/
 
-/.DS_Store
+# Claude Code local state
+.claude/
+
+# macOS
+.DS_Store

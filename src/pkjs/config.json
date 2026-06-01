@@ -1,0 +1,53 @@
+[
+  { "type": "heading", "defaultValue": "Flying Blind" },
+  { "type": "text", "defaultValue": "Tells the time by vibration. The screen stays blank — shake your wrist to reveal it." },
+
+  { "type": "section", "items": [
+    { "type": "heading", "defaultValue": "Display" },
+    { "type": "select", "messageKey": "theme", "label": "Theme", "defaultValue": "dark",
+      "options": [
+        { "label": "Dark", "value": "dark" },
+        { "label": "Light", "value": "light" }
+      ] },
+    { "type": "color", "messageKey": "accent_color", "label": "Time colour", "defaultValue": "0xFFFFFF",
+      "sunlight": true, "allowGray": true },
+    { "type": "text", "defaultValue": "Time colour applies to colour watches only." },
+    { "type": "slider", "messageKey": "reveal_secs", "label": "Reveal seconds", "defaultValue": 3,
+      "min": 2, "max": 10, "step": 1 },
+    { "type": "toggle", "messageKey": "battery_show", "label": "Show battery on reveal", "defaultValue": false }
+  ] },
+
+  { "type": "section", "items": [
+    { "type": "heading", "defaultValue": "Vibration" },
+    { "type": "toggle", "messageKey": "hourly_enabled", "label": "Buzz on the hour", "defaultValue": true },
+    { "type": "select", "messageKey": "vibrate", "label": "Between-hour buzzes", "defaultValue": "0",
+      "options": [
+        { "label": "None (hourly only)", "value": "0" },
+        { "label": "Every 30 minutes", "value": "1" },
+        { "label": "Every 15 minutes", "value": "2" },
+        { "label": "Every 5 minutes", "value": "3" }
+      ] },
+    { "type": "select", "messageKey": "interval_style", "label": "Buzz strength", "defaultValue": "normal",
+      "options": [
+        { "label": "Subtle", "value": "subtle" },
+        { "label": "Normal", "value": "normal" },
+        { "label": "Strong", "value": "strong" }
+      ] },
+    { "type": "text", "defaultValue": "Between-hour buzzes use a different pattern from the hourly chime, so you can tell them apart." }
+  ] },
+
+  { "type": "section", "items": [
+    { "type": "heading", "defaultValue": "Quiet Hours" },
+    { "type": "toggle", "messageKey": "quiet_enabled", "label": "Silence overnight", "defaultValue": false },
+    { "type": "slider", "messageKey": "quiet_start", "label": "From (hour)", "defaultValue": 22, "min": 0, "max": 23, "step": 1 },
+    { "type": "slider", "messageKey": "quiet_end", "label": "To (hour)", "defaultValue": 7, "min": 0, "max": 23, "step": 1 },
+    { "type": "text", "defaultValue": "No buzzing between these hours (24-hour clock)." }
+  ] },
+
+  { "type": "section", "items": [
+    { "type": "heading", "defaultValue": "Alerts" },
+    { "type": "toggle", "messageKey": "bt_alert", "label": "Bluetooth-disconnect buzz", "defaultValue": false }
+  ] },
+
+  { "type": "submit", "defaultValue": "Save Settings" }
+]

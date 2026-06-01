@@ -1,0 +1,57 @@
+{
+  "name": "flying-blind",
+  "author": "Matthew Congrove (modernized by PK)",
+  "version": "2.0.0",
+  "keywords": [
+    "pebble-app",
+    "watchface"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.0.10"
+  },
+  "pebble": {
+    "displayName": "Flying Blind",
+    "uuid": "e6fede97-0806-43e2-9159-54638cd13253",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint",
+      "gabbro"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "capabilities": [
+      "configurable"
+    ],
+    "messageKeys": [
+      "theme",
+      "vibrate",
+      "interval_style",
+      "reveal_secs",
+      "accent_color",
+      "hourly_enabled",
+      "quiet_enabled",
+      "quiet_start",
+      "quiet_end",
+      "bt_alert",
+      "battery_show"
+    ],
+    "resources": {
+      "media": [
+        {
+          "name": "IMAGE_MENU_ICON",
+          "type": "png",
+          "file": "images/menu_icon.png",
+          "menuIcon": true
+        }
+      ]
+    }
+  }
+}
