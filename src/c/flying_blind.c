@@ -260,9 +260,9 @@ static void handle_minute_tick(struct tm *t, TimeUnits units_changed) {
 // between consecutive samples (|Δx|+|Δy|+|Δz|). Lower = lighter taps register.
 // These are starting points; fine-tune by feel on a real watch.
 static int reveal_threshold(void) {
-	if (strcmp(s_sensitivity, "high") == 0) { return 400; }
+	if (strcmp(s_sensitivity, "high") == 0) { return 600; }
 	if (strcmp(s_sensitivity, "low")  == 0) { return 1100; }
-	return 700; // "medium"
+	return 900; // "medium"
 }
 
 // Watch the raw accelerometer for a tap/flick. A sharp tap produces a spike in

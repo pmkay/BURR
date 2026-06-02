@@ -1,74 +1,263 @@
 [
-  { "type": "heading", "defaultValue": "BURR" },
-  { "type": "text", "defaultValue": "Tells the time by vibration. The screen stays blank — tap the watch to reveal it." },
-
-  { "type": "section", "items": [
-    { "type": "heading", "defaultValue": "Display" },
-    { "type": "select", "messageKey": "theme", "label": "Theme", "defaultValue": "dark",
-      "options": [
-        { "label": "Dark", "value": "dark" },
-        { "label": "Light", "value": "light" }
-      ] },
-    { "type": "color", "messageKey": "accent_color", "label": "Time colour", "defaultValue": "0xFFFFFF",
-      "sunlight": true, "allowGray": true },
-    { "type": "text", "defaultValue": "Time colour applies to colour watches only." },
-    { "type": "slider", "messageKey": "reveal_secs", "label": "Reveal seconds", "defaultValue": 3,
-      "min": 2, "max": 10, "step": 1 },
-    { "type": "toggle", "messageKey": "battery_show", "label": "Show battery on reveal", "defaultValue": false },
-    { "type": "toggle", "messageKey": "steps_show", "label": "Show steps on reveal", "defaultValue": false,
-      "capabilities": ["HEALTH"] },
-    { "type": "toggle", "messageKey": "heart_show", "label": "Show heart rate on reveal", "defaultValue": false,
-      "capabilities": ["NOT_PLATFORM_APLITE", "NOT_PLATFORM_BASALT", "NOT_PLATFORM_CHALK", "NOT_PLATFORM_FLINT", "NOT_PLATFORM_GABBRO"] },
-    { "type": "text", "defaultValue": "If more than one of these is on, they share the reveal line in this order: steps · heart · battery." }
-  ] },
-
-  { "type": "section", "items": [
-    { "type": "heading", "defaultValue": "Reveal" },
-    { "type": "toggle", "messageKey": "always_show", "label": "Always show time", "defaultValue": false },
-    { "type": "text", "defaultValue": "When on, the time stays on screen instead of hiding — the watch no longer flies blind." },
-    { "type": "select", "messageKey": "sensitivity", "label": "Tap sensitivity", "defaultValue": "high",
-      "options": [
-        { "label": "High (light tap)", "value": "high" },
-        { "label": "Medium", "value": "medium" },
-        { "label": "Low (firm tap)", "value": "low" }
-      ] },
-    { "type": "text", "defaultValue": "How hard you tap the watch to reveal the time. Higher sensitivity catches lighter taps but may trigger on movement and uses a little more battery. Ignored when Always show is on." }
-  ] },
-
-  { "type": "section", "items": [
-    { "type": "heading", "defaultValue": "Vibration" },
-    { "type": "toggle", "messageKey": "hourly_enabled", "label": "Buzz on the hour", "defaultValue": true },
-    { "type": "select", "messageKey": "vibrate", "label": "Between-hour buzzes", "defaultValue": "0",
-      "options": [
-        { "label": "None (hourly only)", "value": "0" },
-        { "label": "Every 30 minutes", "value": "1" },
-        { "label": "Every 15 minutes", "value": "2" },
-        { "label": "Every 5 minutes", "value": "3" }
-      ] },
-    { "type": "select", "messageKey": "interval_style", "label": "Buzz strength", "defaultValue": "normal",
-      "options": [
-        { "label": "Subtle", "value": "subtle" },
-        { "label": "Normal", "value": "normal" },
-        { "label": "Strong", "value": "strong" }
-      ] },
-    { "type": "text", "defaultValue": "Between-hour buzzes use a different pattern from the hourly chime, so you can tell them apart." }
-  ] },
-
-  { "type": "section", "items": [
-    { "type": "heading", "defaultValue": "Quiet Hours" },
-    { "type": "toggle", "messageKey": "respect_quiet_time", "label": "Respect watch Quiet Time", "defaultValue": true,
-      "capabilities": ["NOT_PLATFORM_APLITE"] },
-    { "type": "text", "defaultValue": "When the watch's system Quiet Time (Do Not Disturb) is on, BURR won't buzz. This is separate from the overnight window below." },
-    { "type": "toggle", "messageKey": "quiet_enabled", "label": "Silence overnight", "defaultValue": false },
-    { "type": "slider", "messageKey": "quiet_start", "label": "From (hour)", "defaultValue": 22, "min": 0, "max": 23, "step": 1 },
-    { "type": "slider", "messageKey": "quiet_end", "label": "To (hour)", "defaultValue": 7, "min": 0, "max": 23, "step": 1 },
-    { "type": "text", "defaultValue": "No buzzing between these hours (24-hour clock)." }
-  ] },
-
-  { "type": "section", "items": [
-    { "type": "heading", "defaultValue": "Alerts" },
-    { "type": "toggle", "messageKey": "bt_alert", "label": "Bluetooth-disconnect buzz", "defaultValue": false }
-  ] },
-
-  { "type": "submit", "defaultValue": "Save Settings" }
+  {
+    "type": "heading",
+    "defaultValue": "BURR"
+  },
+  {
+    "type": "text",
+    "defaultValue": "Tells the time by vibration. The screen stays blank — tap the watch to reveal it."
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Display"
+      },
+      {
+        "type": "select",
+        "messageKey": "theme",
+        "label": "Theme",
+        "defaultValue": "dark",
+        "options": [
+          {
+            "label": "Dark",
+            "value": "dark"
+          },
+          {
+            "label": "Light",
+            "value": "light"
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "messageKey": "accent_color",
+        "label": "Time colour",
+        "defaultValue": "0xFFFFFF",
+        "sunlight": true,
+        "allowGray": true
+      },
+      {
+        "type": "text",
+        "defaultValue": "Time colour applies to colour watches only."
+      },
+      {
+        "type": "slider",
+        "messageKey": "reveal_secs",
+        "label": "Reveal seconds",
+        "defaultValue": 3,
+        "min": 2,
+        "max": 10,
+        "step": 1
+      },
+      {
+        "type": "toggle",
+        "messageKey": "battery_show",
+        "label": "Show battery on reveal",
+        "defaultValue": false
+      },
+      {
+        "type": "toggle",
+        "messageKey": "steps_show",
+        "label": "Show steps on reveal",
+        "defaultValue": false,
+        "capabilities": [
+          "HEALTH"
+        ]
+      },
+      {
+        "type": "toggle",
+        "messageKey": "heart_show",
+        "label": "Show heart rate on reveal",
+        "defaultValue": false,
+        "capabilities": [
+          "NOT_PLATFORM_APLITE",
+          "NOT_PLATFORM_BASALT",
+          "NOT_PLATFORM_CHALK",
+          "NOT_PLATFORM_FLINT",
+          "NOT_PLATFORM_GABBRO"
+        ]
+      },
+      {
+        "type": "text",
+        "defaultValue": "If more than one of these is on, they share the reveal line in this order: steps · heart · battery."
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Reveal"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "always_show",
+        "label": "Always show time",
+        "defaultValue": false
+      },
+      {
+        "type": "text",
+        "defaultValue": "When on, the time stays on screen instead of hiding — the watch no longer flies blind."
+      },
+      {
+        "type": "select",
+        "messageKey": "sensitivity",
+        "label": "Tap sensitivity",
+        "defaultValue": "high",
+        "options": [
+          {
+            "label": "High (light tap)",
+            "value": "high"
+          },
+          {
+            "label": "Medium",
+            "value": "medium"
+          },
+          {
+            "label": "Low (firm tap)",
+            "value": "low"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "defaultValue": "How hard you tap the watch to reveal the time. Higher sensitivity catches lighter taps but may trigger on movement and uses a little more battery. Ignored when Always show is on."
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Vibration"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "hourly_enabled",
+        "label": "Buzz on the hour",
+        "defaultValue": true
+      },
+      {
+        "type": "select",
+        "messageKey": "vibrate",
+        "label": "Between-hour buzzes",
+        "defaultValue": "0",
+        "options": [
+          {
+            "label": "None (hourly only)",
+            "value": "0"
+          },
+          {
+            "label": "Every 30 minutes",
+            "value": "1"
+          },
+          {
+            "label": "Every 15 minutes",
+            "value": "2"
+          },
+          {
+            "label": "Every 5 minutes",
+            "value": "3"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "messageKey": "interval_style",
+        "label": "Buzz strength",
+        "defaultValue": "normal",
+        "options": [
+          {
+            "label": "Subtle",
+            "value": "subtle"
+          },
+          {
+            "label": "Normal",
+            "value": "normal"
+          },
+          {
+            "label": "Strong",
+            "value": "strong"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "defaultValue": "Between-hour buzzes use a different pattern from the hourly chime, so you can tell them apart."
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Quiet Hours"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "respect_quiet_time",
+        "label": "Respect watch Quiet Time",
+        "defaultValue": true,
+        "capabilities": [
+          "NOT_PLATFORM_APLITE"
+        ]
+      },
+      {
+        "type": "text",
+        "defaultValue": "When the watch's system Quiet Time (Do Not Disturb) is on, BURR won't buzz. This is separate from the overnight window below."
+      },
+      {
+        "type": "toggle",
+        "messageKey": "quiet_enabled",
+        "label": "Silence overnight",
+        "defaultValue": false
+      },
+      {
+        "type": "slider",
+        "messageKey": "quiet_start",
+        "label": "From (hour)",
+        "defaultValue": 22,
+        "min": 0,
+        "max": 23,
+        "step": 1
+      },
+      {
+        "type": "slider",
+        "messageKey": "quiet_end",
+        "label": "To (hour)",
+        "defaultValue": 7,
+        "min": 0,
+        "max": 23,
+        "step": 1
+      },
+      {
+        "type": "text",
+        "defaultValue": "No buzzing between these hours"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Alerts"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "bt_alert",
+        "label": "Bluetooth-disconnect buzz",
+        "defaultValue": false
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save Settings"
+  }
 ]
