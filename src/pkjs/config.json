@@ -1,6 +1,6 @@
 [
   { "type": "heading", "defaultValue": "BURR" },
-  { "type": "text", "defaultValue": "Tells the time by vibration. The screen stays blank — shake your wrist to reveal it." },
+  { "type": "text", "defaultValue": "Tells the time by vibration. The screen stays blank — tap the watch to reveal it." },
 
   { "type": "section", "items": [
     { "type": "heading", "defaultValue": "Display" },
@@ -20,6 +20,19 @@
     { "type": "toggle", "messageKey": "heart_show", "label": "Show heart rate on reveal", "defaultValue": false,
       "capabilities": ["NOT_PLATFORM_APLITE", "NOT_PLATFORM_BASALT", "NOT_PLATFORM_CHALK", "NOT_PLATFORM_FLINT", "NOT_PLATFORM_GABBRO"] },
     { "type": "text", "defaultValue": "If more than one of these is on, they share the reveal line in this order: steps · heart · battery." }
+  ] },
+
+  { "type": "section", "items": [
+    { "type": "heading", "defaultValue": "Reveal" },
+    { "type": "toggle", "messageKey": "always_show", "label": "Always show time", "defaultValue": false },
+    { "type": "text", "defaultValue": "When on, the time stays on screen instead of hiding — the watch no longer flies blind." },
+    { "type": "select", "messageKey": "sensitivity", "label": "Tap sensitivity", "defaultValue": "high",
+      "options": [
+        { "label": "High (light tap)", "value": "high" },
+        { "label": "Medium", "value": "medium" },
+        { "label": "Low (firm tap)", "value": "low" }
+      ] },
+    { "type": "text", "defaultValue": "How hard you tap the watch to reveal the time. Higher sensitivity catches lighter taps but may trigger on movement and uses a little more battery. Ignored when Always show is on." }
   ] },
 
   { "type": "section", "items": [

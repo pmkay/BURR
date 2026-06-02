@@ -51,7 +51,9 @@
       "bt_alert",
       "battery_show",
       "steps_show",
-      "heart_show"
+      "heart_show",
+      "always_show",
+      "sensitivity"
     ],
     "resources": {
       "media": [

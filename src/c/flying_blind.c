@@ -1,7 +1,7 @@
 /**
  * BURR — a Pebble watch face that tells the time by vibration.
  *
- * The screen stays blank; flick your wrist to briefly reveal the time.
+ * The screen stays blank; tap the watch to briefly reveal the time.
  * Inspired by the DURR watch (a buzz every few minutes to keep you oriented
  * in time without looking).
  *
@@ -31,6 +31,8 @@ static bool s_bt_alert          = false;     // buzz on Bluetooth disconnect
 static bool s_battery_show      = false;     // show battery % on reveal
 static bool s_steps_show        = false;     // show today's step count on reveal
 static bool s_heart_show        = false;     // show last heart rate (BPM) on reveal
+static bool s_always_show       = false;     // keep the time on screen instead of hiding it
+static char s_sensitivity[8]    = "high";    // tap sensitivity: "high" | "medium" | "low"
 
 // ---------------------------------------------------------------------------
 // UI state
@@ -41,6 +43,11 @@ static TextLayer *s_status_layer;
 static AppTimer  *s_reveal_timer;
 static char       s_time_text[8]    = "00:00";
 static char       s_status_text[32] = "";
+
+// Tap-detector baseline: the previous accelerometer sample, used to measure the
+// sample-to-sample motion that distinguishes a tap/flick from being at rest.
+static bool       s_have_prev       = false;
+static int16_t    s_prev_x, s_prev_y, s_prev_z;
 
 // ---------------------------------------------------------------------------
 // Theme helpers
@@ -123,6 +130,7 @@ static void update_time(struct tm *t) {
 
 static void hide_reveal(void *data) {
 	s_reveal_timer = NULL;
+	s_have_prev = false;   // re-baseline the tap detector after each reveal
 	layer_set_hidden(text_layer_get_layer(s_time_layer), true);
 	layer_set_hidden(text_layer_get_layer(s_status_layer), true);
 }
@@ -132,56 +140,70 @@ static void hide_reveal(void *data) {
 // the compiler's execution charset.
 #define STATUS_SEP " \xc2\xb7 "
 
-// Reveal the time for s_reveal_secs. `status` is an optional override line
-// (e.g. "BT lost"); when NULL the enabled metrics — today's steps, last heart
-// rate, and battery, in that order — are composed onto the single status line,
-// joined by STATUS_SEP. Only metrics the user enabled (and that the watch can
-// actually report) are shown; if none apply the status line stays hidden.
-static void reveal(const char *status) {
+// Compose the status line into s_status_text: either the explicit `status`
+// override (e.g. "BT lost"), or — when NULL — the enabled metrics (today's
+// steps, last heart rate, battery, in that order) joined by STATUS_SEP. Only
+// metrics the user enabled and that the watch can actually report are shown;
+// the buffer is left empty when none apply.
+static void compose_status(const char *status) {
 	if (status) {
 		snprintf(s_status_text, sizeof(s_status_text), "%s", status);
-	} else {
-		s_status_text[0] = '\0';
-		const size_t cap = sizeof(s_status_text);
-		size_t len = 0;
+		return;
+	}
+	s_status_text[0] = '\0';
+	const size_t cap = sizeof(s_status_text);
+	size_t len = 0;
 
 #if defined(PBL_HEALTH)
-		// Steps are reported on every health-capable platform; the value is the
-		// total since the start of the local day (0 if unavailable).
-		if (s_steps_show && len < cap) {
-			int steps = (int)health_service_sum_today(HealthMetricStepCount);
-			int n = snprintf(s_status_text + len, cap - len, "%s%d", len ? STATUS_SEP : "", steps);
-			if (n > 0) { len += n; }
-		}
-		// Heart rate only appears on watches with an HRM sensor that have a recent
-		// reading: gate on both the accessibility mask and a positive value so
-		// non-HRM models (and stale/empty readings) show nothing rather than 0.
-		if (s_heart_show && len < cap) {
-			HealthServiceAccessibilityMask acc =
-				health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
-			int bpm = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
-			if ((acc & HealthServiceAccessibilityMaskAvailable) && bpm > 0) {
-				int n = snprintf(s_status_text + len, cap - len, "%s%d", len ? STATUS_SEP : "", bpm);
-				if (n > 0) { len += n; }
-			}
-		}
-#endif
-
-		if (s_battery_show && len < cap) {
-			BatteryChargeState batt = battery_state_service_peek();
-			int n = snprintf(s_status_text + len, cap - len, "%s%d%%", len ? STATUS_SEP : "", batt.charge_percent);
+	// Steps are reported on every health-capable platform; the value is the
+	// total since the start of the local day (0 if unavailable).
+	if (s_steps_show && len < cap) {
+		int steps = (int)health_service_sum_today(HealthMetricStepCount);
+		int n = snprintf(s_status_text + len, cap - len, "%s%d", len ? STATUS_SEP : "", steps);
+		if (n > 0) { len += n; }
+	}
+	// Heart rate only appears on watches with an HRM sensor that have a recent
+	// reading: gate on both the accessibility mask and a positive value so
+	// non-HRM models (and stale/empty readings) show nothing rather than 0.
+	if (s_heart_show && len < cap) {
+		HealthServiceAccessibilityMask acc =
+			health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
+		int bpm = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
+		if ((acc & HealthServiceAccessibilityMaskAvailable) && bpm > 0) {
+			int n = snprintf(s_status_text + len, cap - len, "%s%d", len ? STATUS_SEP : "", bpm);
 			if (n > 0) { len += n; }
 		}
 	}
+#endif
 
+	if (s_battery_show && len < cap) {
+		BatteryChargeState batt = battery_state_service_peek();
+		int n = snprintf(s_status_text + len, cap - len, "%s%d%%", len ? STATUS_SEP : "", batt.charge_percent);
+		if (n > 0) { len += n; }
+	}
+}
+
+// Show the time and (if any) the status line. When `auto_hide` is set and the
+// user hasn't turned on "always show", schedule it to hide after s_reveal_secs;
+// in always-show mode it simply stays up.
+static void show_face(const char *status, bool auto_hide) {
+	compose_status(status);
 	layer_set_hidden(text_layer_get_layer(s_status_layer), s_status_text[0] == '\0');
 	text_layer_set_text(s_status_layer, s_status_text);
 	layer_set_hidden(text_layer_get_layer(s_time_layer), false);
 
 	if (s_reveal_timer) {
 		app_timer_cancel(s_reveal_timer);
+		s_reveal_timer = NULL;
 	}
-	s_reveal_timer = app_timer_register(s_reveal_secs * 1000, hide_reveal, NULL);
+	if (auto_hide && !s_always_show) {
+		s_reveal_timer = app_timer_register(s_reveal_secs * 1000, hide_reveal, NULL);
+	}
+}
+
+// Briefly reveal the time (auto-hides unless "always show" is on).
+static void reveal(const char *status) {
+	show_face(status, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -208,6 +230,11 @@ static void interval_vibe(void) {
 static void handle_minute_tick(struct tm *t, TimeUnits units_changed) {
 	update_time(t);
 
+	// In always-show mode keep the face up and refresh the status metrics.
+	if (s_always_show) {
+		show_face(NULL, false);
+	}
+
 	if (buzzing_silenced(t->tm_hour)) {
 		return;
 	}
@@ -227,8 +254,53 @@ static void handle_minute_tick(struct tm *t, TimeUnits units_changed) {
 	}
 }
 
-static void handle_tap(AccelAxisType axis, int32_t direction) {
-	reveal(NULL);
+#define REVEAL_SAMPLES_PER_UPDATE 5   // at 25Hz, check for a tap roughly every 200ms
+
+// How hard the user must tap, expressed as the milli-g threshold on the motion
+// between consecutive samples (|Δx|+|Δy|+|Δz|). Lower = lighter taps register.
+// These are starting points; fine-tune by feel on a real watch.
+static int reveal_threshold(void) {
+	if (strcmp(s_sensitivity, "high") == 0) { return 400; }
+	if (strcmp(s_sensitivity, "low")  == 0) { return 1100; }
+	return 700; // "medium"
+}
+
+// Watch the raw accelerometer for a tap/flick. A sharp tap produces a spike in
+// the motion between consecutive samples; when it crosses the sensitivity
+// threshold we reveal the time. While the time is already on screen (a reveal
+// in progress, or always-show mode) we skip detection so it can't re-trigger —
+// hide_reveal() re-baselines afterwards.
+static void handle_accel(AccelData *data, uint32_t num_samples) {
+	if (s_always_show || !s_time_layer) {
+		return;
+	}
+	if (!layer_get_hidden(text_layer_get_layer(s_time_layer))) {
+		return;
+	}
+
+	const int threshold = reveal_threshold();
+	for (uint32_t i = 0; i < num_samples; i++) {
+		// Ignore samples captured while the watch was buzzing — our own vibration
+		// would otherwise read as a tap and reveal the time on every chime.
+		if (data[i].did_vibrate) {
+			s_have_prev = false;
+			continue;
+		}
+		if (s_have_prev) {
+			int dx = data[i].x - s_prev_x;
+			int dy = data[i].y - s_prev_y;
+			int dz = data[i].z - s_prev_z;
+			int delta = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy) + (dz < 0 ? -dz : dz);
+			if (delta >= threshold) {
+				reveal(NULL);
+				return;
+			}
+		}
+		s_prev_x = data[i].x;
+		s_prev_y = data[i].y;
+		s_prev_z = data[i].z;
+		s_have_prev = true;
+	}
 }
 
 static void handle_connection(bool connected) {
@@ -241,6 +313,26 @@ static void handle_connection(bool connected) {
 	}
 	vibes_double_pulse();
 	reveal("BT lost");
+}
+
+// Subscribe to the accelerometer only while we need to watch for taps. In
+// always-show mode the time is permanently visible, so we drop the subscription
+// (and its sampling cost) entirely. Safe to call repeatedly.
+static bool s_accel_on = false;
+static void update_accel_subscription(void) {
+	if (s_always_show) {
+		if (s_accel_on) {
+			accel_data_service_unsubscribe();
+			s_accel_on = false;
+		}
+		return;
+	}
+	if (!s_accel_on) {
+		s_have_prev = false;
+		accel_data_service_subscribe(REVEAL_SAMPLES_PER_UPDATE, handle_accel);
+		accel_service_set_sampling_rate(ACCEL_SAMPLING_25HZ);
+		s_accel_on = true;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -265,6 +357,8 @@ enum {
 	PERSIST_STEPS_SHOW,
 	PERSIST_HEART_SHOW,
 	PERSIST_SYS_QUIET_TIME,
+	PERSIST_ALWAYS_SHOW,
+	PERSIST_SENSITIVITY,
 };
 
 static void load_settings(void) {
@@ -286,6 +380,8 @@ static void load_settings(void) {
 	if (persist_exists(PERSIST_STEPS_SHOW))     { s_steps_show     = persist_read_bool(PERSIST_STEPS_SHOW); }
 	if (persist_exists(PERSIST_HEART_SHOW))     { s_heart_show     = persist_read_bool(PERSIST_HEART_SHOW); }
 	if (persist_exists(PERSIST_SYS_QUIET_TIME)) { s_sys_quiet_time = persist_read_bool(PERSIST_SYS_QUIET_TIME); }
+	if (persist_exists(PERSIST_ALWAYS_SHOW))    { s_always_show    = persist_read_bool(PERSIST_ALWAYS_SHOW); }
+	if (persist_exists(PERSIST_SENSITIVITY))    { persist_read_string(PERSIST_SENSITIVITY, s_sensitivity, sizeof(s_sensitivity)); }
 
 	// Clamp anything that comes from sliders / selects / external input so that
 	// stale or out-of-range persisted data can't cause odd behaviour.
@@ -317,9 +413,20 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
 	if ((t = dict_find(iter, MESSAGE_KEY_steps_show)))     { persist_write_bool(PERSIST_STEPS_SHOW, t->value->int32 != 0); }
 	if ((t = dict_find(iter, MESSAGE_KEY_heart_show)))     { persist_write_bool(PERSIST_HEART_SHOW, t->value->int32 != 0); }
 	if ((t = dict_find(iter, MESSAGE_KEY_respect_quiet_time))) { persist_write_bool(PERSIST_SYS_QUIET_TIME, t->value->int32 != 0); }
+	if ((t = dict_find(iter, MESSAGE_KEY_always_show)))    { persist_write_bool(PERSIST_ALWAYS_SHOW, t->value->int32 != 0); }
+	if ((t = dict_find(iter, MESSAGE_KEY_sensitivity)))    { persist_write_string(PERSIST_SENSITIVITY, t->value->cstring); }
 
 	load_settings();
 	apply_theme();
+
+	// Apply the reveal-mode change right away, and start/stop accel sampling to
+	// match (no need to watch for taps while the time is always shown).
+	if (s_always_show) {
+		show_face(NULL, false);
+	} else {
+		hide_reveal(NULL);
+	}
+	update_accel_subscription();
 }
 
 // ---------------------------------------------------------------------------
@@ -351,6 +458,11 @@ static void window_load(Window *window) {
 	layer_add_child(root, text_layer_get_layer(s_status_layer));
 
 	apply_theme();
+
+	// Start with the time already showing if the user chose always-show.
+	if (s_always_show) {
+		show_face(NULL, false);
+	}
 }
 
 static void window_unload(Window *window) {
@@ -380,7 +492,7 @@ static void init(void) {
 	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
-	accel_tap_service_subscribe(handle_tap);
+	update_accel_subscription();   // watch the accel for taps (unless always-show)
 	connection_service_subscribe((ConnectionHandlers){
 		.pebble_app_connection_handler = handle_connection,
 	});
@@ -388,7 +500,9 @@ static void init(void) {
 
 static void deinit(void) {
 	connection_service_unsubscribe();
-	accel_tap_service_unsubscribe();
+	if (s_accel_on) {
+		accel_data_service_unsubscribe();
+	}
 	tick_timer_service_unsubscribe();
 	app_message_deregister_callbacks();
 	window_destroy(s_window);
