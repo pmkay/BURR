@@ -12,6 +12,8 @@ time. Inspired by the [DURR](https://www.skreksto.re/products/durr) watch.
   heart rate shows only on models with a built-in sensor, e.g. Pebble 2 and
   Pebble Time 2).
 - **Quiet hours** so it never buzzes while you sleep.
+- Respects the watch's system **Quiet Time** (Do Not Disturb) — stays silent
+  whenever Quiet Time is on (enabled by default).
 - Light / dark themes, plus an accent colour for the time on colour watches.
 - Bluetooth-disconnect alert.
 - All settings configured on-device via **Clay** — no website, no account.
@@ -70,6 +72,7 @@ the face). The Clay page lets you set:
 | Buzz on the hour | On / Off |
 | Between-hour buzzes | None / 30 min / 15 min / 5 min |
 | Buzz strength | Subtle / Normal / Strong |
+| Respect watch Quiet Time | On / Off (on by default; hidden on aplite) |
 | Quiet hours | On / Off + start & end hour |
 | Bluetooth-disconnect buzz | On / Off |
 

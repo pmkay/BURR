@@ -26,6 +26,7 @@ static bool s_hourly_enabled    = true;      // long buzz on the hour
 static bool s_quiet_enabled     = false;     // suppress all buzzing overnight
 static int  s_quiet_start       = 22;        // quiet-hours start (0..23)
 static int  s_quiet_end         = 7;         // quiet-hours end   (0..23)
+static bool s_sys_quiet_time    = true;      // respect the watch's system Quiet Time
 static bool s_bt_alert          = false;     // buzz on Bluetooth disconnect
 static bool s_battery_show      = false;     // show battery % on reveal
 static bool s_steps_show        = false;     // show today's step count on reveal
@@ -95,6 +96,18 @@ static bool in_quiet_hours(int hour) {
 		return hour >= s_quiet_start && hour < s_quiet_end;
 	}
 	return hour >= s_quiet_start || hour < s_quiet_end;
+}
+
+// True when buzzing should be suppressed for the given local `hour`: either the
+// watch's system Quiet Time is active and the user chose to respect it, or the
+// hour falls inside BURR's own quiet-hours window. The shake-to-reveal display
+// is intentionally unaffected — only vibration is silenced, which is what Quiet
+// Time is meant to do. (On aplite quiet_time_is_active() is a stub for `false`.)
+static bool buzzing_silenced(int hour) {
+	if (s_sys_quiet_time && quiet_time_is_active()) {
+		return true;
+	}
+	return in_quiet_hours(hour);
 }
 
 // ---------------------------------------------------------------------------
@@ -195,7 +208,7 @@ static void interval_vibe(void) {
 static void handle_minute_tick(struct tm *t, TimeUnits units_changed) {
 	update_time(t);
 
-	if (in_quiet_hours(t->tm_hour)) {
+	if (buzzing_silenced(t->tm_hour)) {
 		return;
 	}
 
@@ -223,7 +236,7 @@ static void handle_connection(bool connected) {
 		return;
 	}
 	time_t now = time(NULL);
-	if (in_quiet_hours(localtime(&now)->tm_hour)) {
+	if (buzzing_silenced(localtime(&now)->tm_hour)) {
 		return;
 	}
 	vibes_double_pulse();
@@ -251,6 +264,7 @@ enum {
 	PERSIST_BATTERY_SHOW,
 	PERSIST_STEPS_SHOW,
 	PERSIST_HEART_SHOW,
+	PERSIST_SYS_QUIET_TIME,
 };
 
 static void load_settings(void) {
@@ -271,6 +285,7 @@ static void load_settings(void) {
 	if (persist_exists(PERSIST_BATTERY_SHOW))   { s_battery_show   = persist_read_bool(PERSIST_BATTERY_SHOW); }
 	if (persist_exists(PERSIST_STEPS_SHOW))     { s_steps_show     = persist_read_bool(PERSIST_STEPS_SHOW); }
 	if (persist_exists(PERSIST_HEART_SHOW))     { s_heart_show     = persist_read_bool(PERSIST_HEART_SHOW); }
+	if (persist_exists(PERSIST_SYS_QUIET_TIME)) { s_sys_quiet_time = persist_read_bool(PERSIST_SYS_QUIET_TIME); }
 
 	// Clamp anything that comes from sliders / selects / external input so that
 	// stale or out-of-range persisted data can't cause odd behaviour.
@@ -301,6 +316,7 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
 	if ((t = dict_find(iter, MESSAGE_KEY_battery_show)))   { persist_write_bool(PERSIST_BATTERY_SHOW, t->value->int32 != 0); }
 	if ((t = dict_find(iter, MESSAGE_KEY_steps_show)))     { persist_write_bool(PERSIST_STEPS_SHOW, t->value->int32 != 0); }
 	if ((t = dict_find(iter, MESSAGE_KEY_heart_show)))     { persist_write_bool(PERSIST_HEART_SHOW, t->value->int32 != 0); }
+	if ((t = dict_find(iter, MESSAGE_KEY_respect_quiet_time))) { persist_write_bool(PERSIST_SYS_QUIET_TIME, t->value->int32 != 0); }
 
 	load_settings();
 	apply_theme();

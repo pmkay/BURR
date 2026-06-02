@@ -43,6 +43,9 @@
 
   { "type": "section", "items": [
     { "type": "heading", "defaultValue": "Quiet Hours" },
+    { "type": "toggle", "messageKey": "respect_quiet_time", "label": "Respect watch Quiet Time", "defaultValue": true,
+      "capabilities": ["NOT_PLATFORM_APLITE"] },
+    { "type": "text", "defaultValue": "When the watch's system Quiet Time (Do Not Disturb) is on, BURR won't buzz. This is separate from the overnight window below." },
     { "type": "toggle", "messageKey": "quiet_enabled", "label": "Silence overnight", "defaultValue": false },
     { "type": "slider", "messageKey": "quiet_start", "label": "From (hour)", "defaultValue": 22, "min": 0, "max": 23, "step": 1 },
     { "type": "slider", "messageKey": "quiet_end", "label": "To (hour)", "defaultValue": 7, "min": 0, "max": 23, "step": 1 },

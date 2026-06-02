@@ -47,6 +47,7 @@
       "quiet_enabled",
       "quiet_start",
       "quiet_end",
+      "respect_quiet_time",
       "bt_alert",
       "battery_show",
       "steps_show",
